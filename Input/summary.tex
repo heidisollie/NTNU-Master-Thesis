@@ -1,0 +1,20 @@
+
+\chapter*{Summary}
+
+\textbf{\Large{English}}
+
+This thesis presents linear model predictive control of a 3 \acrshort{dof} model of a Tandem rotor helicopter, using QUARC, Simulink, and the \acrshort{qp}-solver OSQP - both the MATLAB interface and the code generation software package. Both stable and nominal \acrshort{mpc} are implemented in Simulink using S-Functions and the aforementioned \acrshort{qp}-solver. This is the higher-level of control, the lower level being a \acrshort{pd}-controller for the pitch and a \acrshort{pid}-controller for the elevation.
+
+Further, a known constant drift in the helicopter is modelled and a state estimator is implemented to try to remove this disturbance. In addition slack variables are added to avoid the  hard constraints on pitch. 
+
+A discussion regarding model inaccuracy in \acrshort{mpc} and the effects of terminal cost and constraint are taken. In addition, the selection of the frequency of the higher level of control in comparison to the rest of the system is done. The results, both from a MATLAB simulation and the actual performance of the helicopter are presented, along with an analysis of the OSQP-performance online. Conclusively, the work done in this thesis provides the foundation for \acrlong{mpc} of 3 DOF helicopters.  \\
+
+
+
+\textbf{\Large{Norsk}}
+
+Denne oppgaven presenterer lineær Modell-Prediktiv Regulering (MPR) av et Tandem rotor helikopter med tre frihetsgrader, med bruk av QUARC, Simulink og QP-løseren OSQP - både MATLAB grensesnittet og kodegenereringsprogramvarepakken. Både stabil og nominell MPR var implementert i Simulink ved bruk av S-Funksjoner og den ovennevnte QP-løseren. Dette er det høyeste laget av regulering, mens det lavere nivået er en PD-regulator for pitch-vinkelen og en PID-regulator for hevings-vinkelen. 
+
+Videre, en kjent konstant drift i bevegelsen av helikoptere er modellert og en tilstandsestimator er implementert for å fjerne avviket. I tillegg er slakkvariabler lagt til for å unngå harde beskrankninger på pitch-vinkelen.
+
+En diskusjon angående model unøyaktighet i MPR og effekten av terminal kost og terminal beskrankning er tatt. I tillegg til valg av frekvens for det øverste nivået av regulering, i forhold til resten av systemet. Resultatene, både fra en MATLAB simulasjon og regulering på det faktisk systemet er presentert, i tillegg til en analyse av ytelsen til OSQP under kjøringen ("online"). Arbeidet presentert her legger grunnlaget for Modell-Prediktiv Regulering for helikopteret med 3 frihetsgrader.

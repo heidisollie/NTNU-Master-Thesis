@@ -1,0 +1,32 @@
+%===================================== CHAP 1 =================================
+
+\chapter{Introduction}
+
+
+\section{Background}
+
+
+Talk about propeller-actuated systems, and the under-actuated nature of this specific system. Then talk about how this makes it considerably interesting for research, because something.
+
+Then talk about the control of MPC, the rising popularity, MPC in embedded and try to find something about \acrshort{mpc} on under-actuated systems.
+
+(https://hal.laas.fr/hal-01711135/document)
+
+
+ MPC being classified as the only advanced control technique with a substantial impact on industrial control [6]
+ 
+\acrlong{mpc} is a repetitive optimization based control method that optimizes the constrained state trajectory over a finite horizon, and applies the first control input to the system at every time step.
+
+With this methods rising popularity across all industries and all most types of processes, and the rising demand for faster and smaller electronic devices, the desire for \acrshort{mpc} to run on miniature devices was only inevitable. 
+
+\acrshort{mpc} in the embedded world has some challenges, mainly the complexity of the method. 
+
+
+\section{Motivation}
+
+The motivation for this project was mainly based on the work done in \cite{prosjektoppgave} where a MATLAB simulation of a specific \acrshort{mpc} method was implemented. Applying this work to an actual system seemed to have potential. In addition, this work may aid in the learning of the practical aspects of the subject "Optimization and Control". The subject of \acrshort{mpc} is a large portion of the curriculum, however since using \acrshort{mpc} to control the helicopters in the lab has not been trivial, it is not a part of the lab work in this course. 
+
+
+\section{Outline}
+
+First, the hardware and the system model used will be presented. Second, a study of the model predictive control method, as well as the different versions, will be done. Further, a demonstration of the implementation of the method in MATLAB and Simulink, as well as a few code snippets. Then, the results from both a simulation run in MATLAB and the actual helicopter performance will be shown. The performance of the QP-solver will also be presented here. Then a discussion of the performance, as well as potential improvements that can be made, before the eventual conclusion. 

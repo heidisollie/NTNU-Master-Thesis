@@ -1,0 +1,115 @@
+\documentclass[10pt, b5paper, titlepage, twoside, openright]{report}
+\input{Input/docsetup.tex}
+
+\hypersetup{
+    colorlinks = true,%
+    citecolor=black,%
+    filecolor=black,%
+    linkcolor=black,%
+    urlcolor=black
+}
+
+\makenomenclature
+\makeglossaries
+
+\newcommand{\appendixpagenumbering}{
+  \break
+  \pagenumbering{arabic}
+  \renewcommand{\thepage}{\thesection-\arabic{page}}
+}
+
+\pagenumbering{roman}
+
+\input{Input/acronyms.tex}
+
+
+%BEGIN DOCUMENT -----------------------
+\begin{document}
+
+%TITLE PAGE
+\newgeometry{margin=2cm}
+\begin{titlepage}
+\thispagestyle{empty}
+\centering
+\textsc{\MyDepartment} \\[3cm]
+\textsc{\Huge \MyTitle{}} \\[1cm]
+\textsc{by} \\
+\textsc{\MyAuthor{}} \\[1cm]
+\textsc{\MyCat{}} \\[1cm]
+\textsc{\MySupervisor{}} \\ [1cm]
+\textsc{\large \today}
+
+
+\begin{flushbottom}
+\vfill
+\includegraphics{ntnuthesis/hovedlogo_eng.eps} \\[.5cm]
+\textsc{\small Norwegian University of Science and Technology}
+\end{flushbottom}
+\end{titlepage}
+
+%PREFACE
+\input{Input/preface.tex}
+
+%ABSTRACT
+\input{Input/abstract.tex}
+
+%SUMMARY
+\input{Input/summary.tex}
+
+%TABLE OF CONTENTS
+\tableofcontents
+
+\hypersetup{pageanchor=true}
+
+%LISTS
+\listoffigures
+\lstlistoflistings
+
+%NOMENCLATURE
+\input{Input/nomenclature.tex}
+\printnomenclature
+\pagenumbering{arabic}
+
+%INTRODUCTION
+\input{Input/chapter1.tex}
+
+%LITERATURE REVIEW
+\input{Input/chapter2.tex}
+
+%MPC THEORY
+\input{Input/chapter3.tex}
+
+%MODELL
+\input{Input/chapter4.tex}
+
+%HARDWARE IMPLEMENTATION
+\input{Input/chapter5.tex}
+
+%SOFTWARE IMPLEMENTATION
+%\input{Input/chapter6.tex}
+
+%RESULTS
+\input{Input/chapter7.tex}
+
+%DISCUSSION
+\input{Input/chapter8.tex}
+
+%CONCLUSION
+\input{Input/chapter9.tex}
+\newpage
+
+%ACRONYMS
+\printglossary[title=Acronyms, toctitle=Acronyms, type=\acronymtype]
+
+%BIBLIOGRAPHY
+\input{Input/references.tex}
+
+\pagenumbering{gobble}
+
+%APPENDIX
+\begin{appendices}
+\appendixpagenumbering
+\input{Input/appendix.tex}
+\end{appendices}
+
+\end{document}

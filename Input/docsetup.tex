@@ -1,0 +1,99 @@
+
+
+\linespread{1.15}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}  
+
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{gensymb}
+\usepackage{tikz}
+\usetikzlibrary{shapes.multipart}
+\usepackage[toc,acronyms]{glossaries}
+\usepackage{fancyhdr}
+%\usepackage{setspace}
+%\usepackage[pdftex]{graphics}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{amssymb}
+%\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{units}
+\usepackage{mathrsfs}
+\usepackage{mathtools}
+\usepackage{empheq}
+\usepackage{color}
+\usepackage{todonotes}
+\usepackage{filecontents}
+\usepackage{parskip}    % skip the indent of a new paragraph.
+\usepackage{comment}
+\usepackage[export]{adjustbox}
+\usepackage{wrapfig}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage[section]{placeins}
+\usepackage{float}
+\usepackage{verbatim}
+\usepackage{listings}
+\usepackage[pass]{geometry} 	%Sentrere Forside og tittelside
+\usepackage{pgfplots}
+\usepackage{wasysym}
+
+\usepackage[capitalise,noabbrev]{cleveref} 
+
+%\usepackage{csvsimple}  % for simple table reading and display
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{gnuplottex} %miktex option if using miktex on windows
+\usepackage{rotating}
+\usepackage[numbers]{natbib} % for Vancover numbers in bibliography
+\usepackage{epstopdf}
+\usepackage{nomencl}
+\usepackage[toc,page]{appendix}
+
+%LOAD LAST
+\usepackage[pdftex,bookmarks=true]{hyperref}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\renewcommand*\contentsname{Table of Contents}
+
+\restylefloat{figure}
+\pgfkeys{/pgf/number format/.cd, 1000 sep={\,}, min exponent for 1000 sep=4}
+
+\definecolor{mygreen}{rgb}{0,0.5,0.05}
+\definecolor{darkgreen}{rgb}{0,0.5,0}
+\definecolor{darkred}{rgb}{0.5,0.0,0}
+
+\lstset{language=Matlab, frame=single, breaklines=true,numbers=left, keywordstyle=\color{blue},rulecolor=\color{black},commentstyle=\color{mygreen}}
+
+\newcommand\m[1]{\begin{bmatrix}#1\end{bmatrix}}
+\def\bm#1{\mathbf{#1}}
+
+
+
+%
+%\newcommand\databar[3][gray!20]{%
+%  \FPeval\result{round(#3/#2:4)}%
+%  \rlap{\textcolor{#1}{\hspace*{\dimexpr-\tabcolsep+.5\arrayrulewidth}%
+%        \rule[-.05\ht\strutbox]{\result\maxbarlen}{.95\ht\strutbox}}}%
+%  \makebox[\dimexpr\maxbarlen-2\tabcolsep+\arrayrulewidth][r]{#3}}
+
+
+%\newcommand{\com}[1]{{\color{red}#1}} 
+\renewcommand{\todo}[1]{{\color{darkgreen}#1}}
+\newcommand{\n}[1]{{\color{blue}#1}}
+\newcommand{\dn}[1]{}
+
+
+
+\newcommand{\q}[1]{\leavevmode\marginpar{\small\em #1}}
+\renewcommand{\q}[1]{}
+
+%Title page
+
+\newcommand{\MyAuthor}{Heidi-Irene Harvey Sollie}
+\newcommand{\MyTitle}{Linear Model Predictive Control of Quanser's 3 DOF Helicopter}
+\newcommand{\MyHeader}{\MyTitle}
+\newcommand{\MyCat}{Master thesis}
+\newcommand{\MySupervisor}{Supervisor: Prof. Lars Imsland}
+\newcommand{\MyDepartment}{Department of Engineering Cybernetics}

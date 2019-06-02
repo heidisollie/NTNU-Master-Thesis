@@ -1,0 +1,482 @@
+
+
+
+
+
+\chapter{Model Predictive Control Theory} \label{sec:MPC}
+
+
+
+\section{QP-problem}
+
+\acrfull{mpc}, also called \acrfull{rhc}, is a control strategy that implements an implicit control law by solving a constrained optimal control problem over a finite time horizon.
+
+The basic idea behind \acrlong{mpc} is optimizing the systems state trajectory and resulting control input, given a finite-horizon cost function, for every time step and applying the first optimal control input to the system.
+
+\acrshort{mpc} is one of the most attractive feedback strategies utilized, especially for constrained linear systems. 
+
+The three main stages of the algorithm are
+\begin{enumerate}
+    \item Measuring the current state of the system
+    \item Solving the given optimization problem
+    \item Applying the first control input to the system, while the others are rejected
+\end{enumerate}
+
+
+Legg inn figure av MPC men bruk ekte tall fra systemet.
+Altså ta 4 tidssteg av en tilstand pluss en optimal trajectory og optimal control input. 
+
+
+If a nonlinear process model is used in the prediction, it is referred to as \acrfull{nmpc}, while a linear model is just \acrfull{mpc}. The advantages to using \acrlong{nmpc} are beyond the scope of this thesis, but in short the advantage is a more accurate process model leading to a more accurate prediction, but at the cost of computational cost and run-time. 
+
+Even though a software framework for embedded \acrlong{nmpc} has been suggested, with sampling times in the millisecond range \cite{Englert2019}, this implementation relies on the software being compatible with QUARC. 
+
+%Try to find the downside in this. You need at least one good reason for why you didn't do this. 
+
+Linear \acrshort{mpc} is by far the most heavily used. It is less complex - in best case it can be a convex \acrshort{qp}-problem - and the feedback mechanism of \acrshort{mpc} can account for differences between the model and the actual system, which are certain to exist since a linear model will never be completely accurate in an actual process. It is used in this project, mainly because keeping the complexity of the optimization problem minimal is important as it will be running on an embedded system, with limited capacity. In addition the framework already written for this project in \cite{prosjekt_oppgave}, was made for a linear system model and the whole process becomes more complicated if \acrlong{nmpc} is used instead.
+
+The basic formulation for the optimization problem solved in \acrshort{mpc} problem is,
+
+\begin{equation}\label{eq:MPC_unstable}
+    \begin{split}
+        \mathbb{P}_n (x_0) \: = \: \min_{\bm x, \bm u} & \: \: \frac{1}{2} \sum_{j=0}^{{N-1}}(x_{n+1}^\top Q x_{n+1 } + u_{n}^\top R u_n) \: \: , \\
+        \text{s.t. }    & x_{i+1} = Ax_i + Bu_i \: \forall \: i \in \mathbb{Z}_{[0:N-1]},\\
+                        & x_i \in \mathbb{X} \: \forall \: i \in \mathbb{Z}_{[1:N]}  \: \: , \\
+                        & u_i \in \mathbb{U} \: \forall \: i \in \mathbb{Z}_{[0:N-1]}    \: \: , \\
+    \end{split}
+\end{equation}
+with 
+\begin{equation}\label{eq:MPC_unstable_desc}
+    \begin{split}
+        x_i, \mathbb{X} &\in \mathbb{R}^n \: \: , \\
+        u_i, \mathbb{U} &\in \mathbb{R}^m \: \: , \\
+       Q, A &\in \mathbb{R}^{n\times n}, \: B \in \mathbb{R}^{n\times m} \: \: , \\
+       R &\in \mathbb{R}^{m \times m} \: \: .
+    \end{split}        
+\end{equation}
+
+The matrices $A$ and $B$ are the matrices for the state space model for the given system.
+
+In addition, a few conditions to ensure nominal stability: the matrices $Q$ and $R$ must be real and symmetric, $Q$ must be positive semidefinite, and $R$ must be positive definite.
+
+This problem formulation is used in a number of \acrshort{mpc} implementations, and can be shown to nominally stable %\cite{something}.
+
+To keep this stable, one has to choose a rather large horizon $N$, which in turn increases the complexity of the problem. This trait is highly unwanted in embedded systems.
+
+
+However, an extension to this problem can be made that has been proven ot [...]. 
+
+Note that this problem optimizes the $N$-horizon constrained state and input trajectory based in the system dynamics and the current state of the system $x_0$. This takes place instead of the infinite-horizon optimization, because of constraint handling. However, adding the infinite-horizon trajectory to the cost function would be equivalent to optimizing on a infinite-trajectory where constraint-handling takes place in the first $N$-steps, and an LQR regulator is present after this, for $x_{N+1}, x_{N+2}, \hdots. $ 
+
+This is just an abstract explanation of how the \acrshort{mpc} calculates the optimal trajectory and control input for each time-step. The control input applied to the actual system for each time step, considers the constraints.
+
+Consider the potential infinite horizon cost function, but with the control law $u_k = Kx_{k}$,
+
+\begin{equation}\label{eq:cost_inf_horizon}
+    \begin{split}
+        &\sum_{k=0}^{\infty} x_k^\top (Q + K^\top R K) x_k \: \: ,
+    \end{split}
+\end{equation}
+and the state feedback matrix 
+\begin{equation}\label{eq:feedback_matrix}
+    K = -(R + B^\top P B)^{-1} B^\top P A \: \: ,
+\end{equation}
+where $P$ is the solution to the \acrfull{dare},
+\begin{equation}\label{eq:DARE}
+    A^\top P A - P + Q - A^\top PB(R + B^\top PB)^{-1}B^\top PA = 0 \: \: . \\
+\end{equation}
+
+Given equation \eqref{eq:feedback_matrix}, this can be written as,
+
+
+\begin{equation}\label{eq:new_DARE}
+    A_K^\top P A_K - P + Q + K^\top R K = 0\: \: ,
+\end{equation}
+with $A_K = A + B K $ being the new system matrix for 
+\begin{equation}
+    x^+ = A x + B u 
+\end{equation}
+with feedback control law $u = Kx$.
+
+Inserting the revised equation \eqref{eq:new_DARE} into the infinite horizon cost function \eqref{eq:cost_inf_horizon}, but only considering the cost beyond the horizon $N$, yields
+\begin{equation}
+    \begin{split}
+    &\sum_{k=N}^{\infty} x_k^\top (P - A_K^\top P A_K) x_k \\
+    = &\sum_{k=N}^{\infty} x_k^\top P x_k - \sum_{k=0}^{\infty} x_{k+1}^\top P x_{k+1} \\
+    = & x_N^\top P x_N \: \: .
+    \end{split}
+\end{equation}
+
+This requires $(A, B)$ to be controllable, such that a solution to the \acrshort{dare} $P$ is positive definite and the eigenvalues of $(A-BK)$ is asymptotically stable.
+
+Adding this term to the original \acrshort{mpc} problem adds a terminal cost such that the optimization considers a control law beyond the horizon, which results in a more stable control of the system.
+
+This implies that the optimal state and control trajectory calculated at each time step, accounts for the fact that beyond the horizon the system will be controlled by an \acrshort{lqr}.
+
+This result shows that it is possible to optimize on an infinite horizon, with a finite sum in the objective function. It is useful to note that the \textit{so called control} beyond the horizon will not ensure constraint satisfaction.
+
+The idea is that the control input for the finite horizon handles the constraints so the \acrshort{lqr} controller is optimal for the rest of the horizon. \cite{optreg}
+ 
+Rawlings and Mayne points out that, in light of this proof, it has been shown that there exists a set of initial states for which \acrshort{mpc} is actually optimal for the infinite horizon constrained optimal problem. 
+ 
+These conditions are sufficient for \textit{nominal stability} of the control law. Meaning, in the absence of any disturbance, the above problem formulation is a stable version of \acrshort{mpc}. However, for most systems, disturbance is a reality and therefore one extra measure can be added to the problem to ensure stability. 
+
+This is a terminal constraint on the last state, $x_N \in \mathbb{X}_f$ in an attempt to control the state trajectory past the horizon. 
+
+"A detailed proof of the stability of nominal \acrshort{mpc} is outside the scope of this paper. However, the above derivations have hopefully given the reader an intuitive understanding of the contribution the terminal constraint set and terminal cost has to the stability of the \acrshort{mpc}."
+    
+Finally, consider the revised optimal control problem,
+
+\begin{equation}\label{eq:MPC_stable}
+    \begin{split}
+        \mathbb{P}_s(x_0) \: = \: \min_{\bm x, \bm u}& \: \: \frac{1}{2} \sum_{j=0}^{{N-1}}(x_{j}^\top Q x_{j} + u_{j}^\top R u_j) + x_N^\top P x_N \: \: , \\
+        \text{s.t. }    & x_{i+1} = Ax_i + Bu_i \: \forall \: i \in [0, N-1],\\
+                        &  {x_{lb}}_i \leq x_i \leq  {x_{ub}}_i \: \forall \: i \in [1, N]  \: \: , \\
+                        &  {u_{lb}}_i \leq u_i \leq  {u_{ub}}_i \: \forall \: i \in [0, N-1]    \: \: , \\
+                        x_N \in \mathbb{X}_f \: \: ,
+    \end{split}
+\end{equation}
+where the previous assumptions in \eqref{eq:MPC_unstable_desc} still applies, in addition to 
+\begin{equation}\label{eq:MPC_stable_desc}
+    \begin{split}
+       P &\in \mathbb{R}^{n\times n}, \: B \in \mathbb{R}^{n\times m} \: \: , \\
+    \end{split}        
+\end{equation}
+
+and $P$ has to be positive semi-definite. This is to ensure that a solution to the \acrlong{dare} exists.
+
+This is a more stable version of the original \acrshort{mpc} description.
+    
+The revised cost function now includes the term $x_0^\top Q x_0$. This is merely because it makes the formulation easier, and this constant term will not effect the optimal solution.
+
+For both formulations, the quadratic program is solved at every time step and the first control action $u_0$ is applied to the system.
+
+\section{Reference tracking}
+
+Another feature \acrshort{mpc} handles very well is reference tracking.
+This is partially utilized in this project. If one aims for steering the helicopter from $\lambda = \lambda_{int}$ to $\lambda = 0$, the equilibrium point, then the $x^{\text{ref}}$ term disappears. And adding a constant term $\lambda_int$ to the $\lambda$ measurement in Simulink gives  the initial point that is wanted. 
+
+
+\begin{equation}
+    \sum (x_n - (x^{\text{ref}}_n)^\top Q (x_n - (x^{\text{ref}}_n) + u_n^\top R u_n \: \: .
+\end{equation}
+
+Another version of this is trajectory tracking, 
+
+\section{Terminal constraint}\label{sec:terminal_constraint}
+
+The selection of the terminal constraint is very important.
+
+The idea is too select the largest feasible control invariant set possible.
+
+This entails inserting the LQR controller $u = Kx$ into the system equation
+\begin{equation}
+    \begin{split}
+        x^+ = A x + B u \: \: , \\
+        C x + D u \leq e \: \: ,
+    \end{split}
+\end{equation}
+to get
+\begin{equation}
+    \begin{split}
+        x^+ = A_K x \: \: , \\
+        C_K x \leq e \: \: .
+    \end{split}        
+\end{equation}
+
+Then calculating the \textit{maximal positive invariant set} under these conditions. Requiring the last state of the optimal state trajectory to be in this set ensures stability past the horizon. 
+
+Figure
+
+
+One drawback of enforcing the terminal constraint, especially a constant terminal constraint calculated offline, is that starting out far from a equilibrium point with a short horizon, the problem becomes infeasible very easily. 
+
+For example consider the helicopter starting out at $\lambda = 180 deg$ with N = 15. This initial point is infeasible, so \acrshort{mpc} control from this point is impossible.
+
+A solution to this problem is moving terminal constraint, calculated online, which considers the current state of the system. This requires running on a system with enough computational power to calculate such things. This will be discussed in more detail later on. 
+
+
+A concept known as \textit{recursive feasiblity}, described in Rawlings and Mayne \cite{Rawlings&Mayne}, implies that given the feasible region $X_n$ as a subset of $\mathbb{R}^n$, then for any initial state $x_0 \in X_n$, all subsequent states under the system model $x^+ = Ax + Bu$ also lie in $X_n$. However, as mentioned earlier, this only applies to the nominal system and for most systems with a disturbance, something can cause the state to become infeasible. This leads to the optimal control problem not having a solution, and the controller fails.
+
+Choosing the terminal constraint to be the \textit{maximal invariant constraint admissible set} for $x^+ = (A + BK) x.$ This is the largest set W, such that $W \subset \{ x \in \mathbb{X} | Kx \in \mathbb{U} \}$ and $x \in W \rightarrow x_i = A_K^i x \in W$. Given this definition the terminal constraint set $\mathbb{X}_f$ is control invariant. If the initial state is in the terminal constraint set, the controller $u = Kx$ ensures the state trajectory stays in the set, under state and control constraints for all future time. 
+
+
+\begin{equation}
+    \mathbb{X}_f \subset \mathbb{X}, K \mathbb{X}_f \subset \mathbb{U} \: \: .
+\end{equation}
+
+
+The terminal constraints $\mathbb{X}_f$ is the set of states such that the evolution of the state trajectory stays in the set and satisfies the constraints, when $\bar{u} = K \bar{x}$. Chapter 2.6 in \cite{Rawlings&Mayne} addresses the necessity of the terminal constraint. 
+
+"Addition of the terminal cost does not materially affect the optimal control problem"
+
+The terminal constraint should have the property that for every $x \in \mathbb{X}_f$, there exists a feasible control input such that $x^+ = Ax + Bu \in \mathbb{X}_f$, $V_f(x^+) - V_f(x) \leq -l(x,u)$.
+
+
+Terminal set: $\mathbb{X}_f = \{ x \in \mathbb{R}^n | V_f(x) \leq \alpha \}$ with $\alpha$ chosen by the designer such that $x \in \mathbb{X}, Kx \in \mathbb{U}.$
+
+Another method is not enforcing the terminal constraint but just verified a-posteriori and increasing N if not satisfied. 
+
+Useful lemma 2.40, page 145:
+Given the optimal control trajectory for the terminally unconstrained optimal problem, the associated optimal state trajectory will not be in the terminal constraint set if the last state $x_N$ is not in the terminal constraint set. 
+
+
+Even though the terminal constraint set is not always necessary, especially if there are no hard state constraints in the problem from before, it is deemed necessary for the control of the system discussed in this project. 
+
+
+
+"If it is desired that the feasible sets are nested (ensuring recursive feasibility), it is necessary to include a terminal constraint. "
+
+
+
+\section{Integral action in MPC}
+
+\cite{Rawlings&Mayne} chapter 1.5.2 discusses this topic.
+And chapter 5.
+\cite{merging_opt_control} discusses this approach. 
+
+Observe that the \acrshort{mpc}-controller behaves similar to a \acrshort{pd}-controller, in the sense that [...]. As a parallel, these controllers don't have integral action, so removing residual errors can be a challenge. There are many ways for embedding integral action into \acrlong{mpc}. 
+
+\cite{Rawlings&Mayne} (ch.1.5.2) discusses the concept of constructing an \acrshort{mpc}-controller to achieve zero offset. They state that this method is "similar to what one achieves when using the integral mode in \acrshort{pid}-control of an unconstrained system". \cite{Rawlings&Mayne} (page 49).
+
+Most methods aimed at zero offset use the same approach. Firstly, model the disturbance. Secondly, use the actual measurements and model to estimate the disturbance. Lastly, find the inputs that minimize the effect of the disturbance. 
+
+The approach discussed in \cite{merging_opt_control} will be presented here. 
+
+
+The helicopter simulation used in the practical aspect of this thesis and described in detail in section \ref{sec:helicopter} has an unfortunate flaw in its design. The two propellers spin in the same direction, which causes a constant torque around the travel axis and therefore a constant drift in the travel. 
+
+This can be noted in the initial simulations of the helicopter presented in chapter \ref{ch:results}. Obviously, this constant deviation is problematic if this system and this controller is to be of any practical use. 
+
+A simple solution to this constant deviation is modeling the constant disturbance to the travel as a state to the state space model. Then, by adding implementing a state estimator to estimate its value, the optimization, and therefore the current control action, will account for the disturbance. This method is described in \cite{merging_opt_control}, as well as below. 
+
+Adding a \textit{Luenberger observer}.
+
+The error dynamics, defined by 
+\begin{equation}
+    e^+ = (A - LC) e \: \: ,
+\end{equation}
+converges to zero if one selects the estimator gain $L$ such that $(A-LC)$ has all the eigenvalues inside the unit circle.
+
+
+Augmenting the state space model yields,
+\begin{equation}
+    \begin{split}
+        \m{ x^+ \\  d^+} &= \m{A & A_d \\ 0 & 1} \m{ x \\  d} + \m{B \\ 0} u \: \:, \\
+        y &= \m{C & C_d} \m{x \\ d} \: \: .
+        \end{split}
+\end{equation}
+
+For simplicity sake, in this section $x^+ = Ax + Bu, \: y = Cx$ will be used to describe the augmented system dynamics.
+
+The state observer,
+\begin{equation}
+    \begin{split}
+        \hat x &= A \hat x + B u + L^\top ( y - \hat y) \: \: , \\
+        \hat y &= C \hat x \: \: ,
+    \end{split}
+\end{equation}
+gives the error dynamics $e = x - \hat x$,
+\begin{equation}
+    \begin{split}
+        e^+ = (A - LC) e \: \: .
+    \end{split}
+\end{equation}
+
+This observer, \textit{the prediction observer}, predicts the state in the next time step based solely on past measurements. It does not depend on the most current measurement, which causes the observer to perform worse.
+
+Check this out
+ This needs to be checked out. In simulink it looks like this isn't the case
+An alternative observer, \textit{the current observer}, is suggested,
+\begin{equation}
+    \begin{split}
+        \bar x^+ = \hat A \hat x + \hat B u \: \: , \\
+        \hat x = \bar x + L(x - \bar x) \: \: ,
+    \end{split}
+\end{equation}
+which yields the error dynamics,
+\begin{equation}
+    e^+ = (A - LA) e \: \: .
+\end{equation}
+
+The optimal solution is using a kalman filter, otherwise referred to as \textit{a linear quadratic estimator (LQE)}. The kalman filter assumes the system model is 
+\begin{equation}
+    \begin{split}
+        \tilde x^+ = \hat A \tilde x + \hat Bu + \hat Ew \: \: , \\
+        y = \hat C \tilde x + v \: \: ,
+    \end{split}
+\end{equation}
+
+where $w$ is a disturbance on the system and $v$ is measurement noise. These are assumed to be white Gaussian noise with zero mean and zero correlation and a given covariance. With this knowledge, the kalman filter calculates an observer gain matrix $K_f$ that minimizes the variance of the estimation error $e$. However, this observer requires that the covariance of the process and measurement noise be known, which isn't always the case. In addition, this observer is better suited for systems with a lot of dynamic disturbance. It is already established that the disturbance present in the helicopter system is constant and easy to model.
+
+
+
+\section{Slack variables}
+A common issue when implementing \acrshort{mpc} as a controller, is the possibility that the system enters into a state which makes the optimization problem infeasible. This is common when there is a disturbance in the system, such that the system dynamics varies slightly from the prediction of the \acrshort{mpc} controller.
+
+In this case, a slack variable $\epsilon_p$ is added to the constraint on the pitch and to the cost function as $s \epsilon_p^2$. This was found to be necessary mainly because this constraints is not a hard constraint. It is implemented primarily to attempt to keep the system as close to the equilibrium point as possible, so the linearized model stays relatively accurate.
+
+There is also a question of how many slack variables and whether to have different ones for the upper and lower constraint, and different variables for each time step. 
+
+
+
+Having the same variable over a horizon saves a lot in regards to complexity but it comes at a cost. When the slack variable is the same for the whole horizon, any constraint violation at any point will allow for constraint violation over the whole horizon without any extra cost. Therefore, this will lead to a much less stable control of the system. 
+
+If the lower and upper constraints are weighted separately, consider having a different slack variable for each one. 
+
+
+\section{Stability of MPC}
+
+
+This section will talk about the stability of MPC. Stability criteria, and some proofs.
+
+\section{Robustness of MPC}
+A nominal stability analysis is out of the scope of this thesis. However, analysing the potential robustness of the method is seen as useful.
+
+Demonstrating robustness for an uncertain system is important, especially when the disturbance is not known. 
+
+[Talk about robustness here]
+
+
+
+A way to ensure robustness is using tube-based model predictive control, a version of model predictive control that ensures that the state trajectory will always be contained in a tube with the nominal state trajectory, given the assumptions on the disturbance hold, by tightening the state and control constraints. 
+
+The resulting control problem when attempting to control the given system using this model and the given implementation is too complex so this idea was abandoned quite early in the process.
+
+However, there are ways to ensure robustness, even when the system disturbance is unknown. 
+
+Robust control of this system has been attempted in [], however no literature on robust \acrshort{mpc} has been publically available.
+
+
+
+
+
+\section{Pre-stabilization}
+
+
+Given the optimal control problem for \acrshort{mpc} described in equation \eqref{eq:MPC_stable}, there is a slight adjustment to the algorithm that can reduce the complexity of the problem. 
+
+Define a new optimal control trajectory $\bm c = \m{c_0 & c_1 & \hdots & c_{N-1}}^\top,$ and a new control law, 
+
+\begin{equation}\label{eq:mpc_feedback_control_law}
+    u_k = c_k + K x_k \text{, for  } k \in \mathbb{Z}_{[0:N-1]} \: \: .
+\end{equation}
+
+This in turn leads to an augmented control problem, where this variation in control input is taken into consideration.
+
+For this, the problem formulation presented in equation \eqref{eq:MPC_stable}, is used as the starting point. Replacing the control input $u_k$ with $c_k$ using equation \eqref{eq:mpc_feedback_control_law}, results in,
+
+
+\begin{equation}\label{eq:MPC_stable}
+    \begin{split}
+        \min_{\bm x, \bm c}& \: \: \frac{1}{2} \sum_{n=0}^{{N-1}}(x_{n}^\top \tilde Q x_{n} + c_n^\top R c_n + 2 c_n^\top R^\top K x_n ) + x_N^\top P x_N \: \: , \\
+        \text{s.t. }        & x_0 \text{ given} \: \: , \\
+                            & x_{i+1} = A_k x_i + Bc_i \: \forall \: i \in [0, N-1],\\
+                            &  {x_{lb}}_i \leq x_i \leq  {x_{ub}}_i \: \forall \: i \in [1, N]  \: \: , \\
+                            &  {u_{lb}}_i \leq c_i + Kx_i \leq  {u_{ub}}_i \: \forall \: i \in [0, N-1]    \: \: , \\
+                           & x_N \in \mathbb{X}_f \: \: ,
+    \end{split}
+\end{equation}
+where
+\begin{equation}
+  \tilde Q = (Q + K^\top R K) \:, A_K = A + BK \: \: .
+\end{equation}
+
+This new formulation gives an identical performance as the other \acrshort{mpc}. However, it also gives a guaranteed asymptotically stable system matrix $A_K$, because $K$ is chosen by the designer. This method, known as \textit{pre-stabilization}, reduces the complexity of the calculations made when removing the equality constraints, shown in section \ref{sec:remove_eq_constr}. When $A_K$ is asymptotically stable, calculating $A_K^i$ does not increase as $i$ increases. The system described in this project has an asymptotically stable system matrix, so this method is not necessary.  
+
+
+\section{Removing equality constraints}\label{sec:remove_eq_constr}
+ 
+The standard \acrshort{mpc} problem, described in previous works, will be reformulated to fit the \acrshort{qp}-problem used in the implementation of OSQP. 
+It is recognized that another possibility is just letting $lb$ = $ub$. However, there are more benefits to removing equality constraints altogether, as will become evident.
+
+A reformulation will be used that optimizes over the same function with only inequality constraints. The benefits of this will become clear (it involves a lower triangular matrix). 
+
+The problem solves in OSQP is presented below, 
+
+ \begin{equation}
+ \begin{split}
+\min \: &\frac{1}{2} z^\top P z + q^\top z \: \: , \\
+\text{subject to } l &\leq Az \leq u \: \: .
+\end{split}
+ \end{equation}
+
+
+Starting with the discrete system equation, 
+\begin{equation}
+    x^+ = A x + B u \: \: ,
+\end{equation}
+one can note the following development.
+ 
+ \begin{equation}
+     \begin{split}
+         x_1 &= A x_0 + B u_0 \\
+         x_2 &= Ax_1 + Bu_1 \\
+             &= A(Ax_0 + Bu_0) + Bu_1 \\
+             &= A^2 x_0 + AB u_0 + Bu_1\\
+        x_3 &= Ax_2 + Bu_2 \\
+            &= A(A^2 x_0 + ABu_0 + Bu_1) + Bu_2 \\
+            &= A^3 x_0 + A^2Bu_0 + ABu_1 + Bu_2 \\
+             & \: \vdots \\
+        x_k &= A^{k-1}B u_{0} + A^{k-2} Bu_{1} + \hdots + B u_2 + A^k x_0
+     \end{split}
+ \end{equation}
+ \begin{equation}
+ \begin{split}
+     \m{x_1 \\ x_2 \\ \vdots \\ x_N } &= \m{B & 0 & \hdots & 0 & 0 \\ AB & B & \hdots & 0 & 0 \\  & & \vdots & \\ A^{N-1} B & A^{N-2} B & \hdots & AB & B} \m{u_0 \\ u_1 \\ \vdots \\ u_{N-1}} + \m{A \\ A^2 \\ \vdots \\ A^N} x_0  \\
+\end{split}     
+\end{equation}
+One can write this as 
+\begin{equation}\label{eq:xSuSx}
+    \bm x = S_u \bm u + S_x x_0 
+\end{equation}
+with
+\begin{equation}
+    \bm x = \m{x_1 \\ x_2 \\ \vdots \\ x_N} \text{ and } \bm u = \m{u_0 \\ u_1 \\ \vdots \\ u_{N- 1}}.
+\end{equation}
+Inserting equation \eqref{eq:xSuSx} into the objective function gives the following development,
+\begin{equation}
+\begin{split}
+    \phi &= ( \sum_{n=0}^{N-1} x_{n+1}^\top Q_{n+1}
+    x_{n+1} + u_n R_n u_n ) + x_N^\top P x_N \\
+    &= \bm x^\top \bar{Q} \bm x + \bm u^\top \bar{R} \bm u \\
+    &= (S_u \bm u + S_x x_0)^\top \bar{Q} (S_u \bm u + S_x x_0) + \bm u^\top \bar{R} \bm u \\
+    &= \bm u^\top S_u^\top \bar{Q} S_u \bm u + x_0^\top S_x^\top \bar{Q} S_x x_0 + \bm u^\top S_u^\top \bar{Q} S_x x_0 + x_0^\top S_x^\top \bar{Q} S_u \bm u + \bm u^\top \bar{R} \bm u \\
+    &= \bm u^\top ( S_u^\top \bar{Q} S_u + \bar{R} ) \bm u + 2 x_0^\top S_x^\top \bar{Q} S_u \bm u + x_0^\top S_x^\top \bar Q S_x x_0 \: \: ,
+    \end{split}
+\end{equation}
+with 
+\begin{equation}
+    \bar Q = \m{Q_1 & & & \\
+               & Q_2 & & \\
+               & & \ddots \\
+               & & & Q_{N-1} \\
+               & & & & P}, \: \: \bar R = \m{R_0 & & \\
+               & R_1 & \\
+               & & \ddots \\
+               & & & R_{N-1}} \: \: . \\
+\end{equation}
+
+Noting that a constant sum of the objective function is redundant to the solution of the \acrshort{qp}-problem, the objective function for OSQP becomes
+\begin{equation}
+    \phi = \frac{1}{2} z^\top P z + q^\top z \: \: ,
+\end{equation}
+with
+\begin{equation}
+    P = 2 S_u^\top \bar{Q} S_u + \bar{R}, \: \:  q = 2 S_u^\top \bar{Q} S_x x_0 , \: \: z = \bm u \: \: .
+\end{equation}
+
+The problem can now be formulated as,
+
+\begin{equation}\label{eq:prob_no_eq_constr}
+    \begin{split}
+    \min_{z}  & \: \:  \phi \: \: , \\
+    \text{subject to } & \: \: S_u z + S_x x_0 \in \mathbb{X} \: \: , \\
+                       & \: \: z \in \mathbb{U} \: \: , \\ 
+                       & \: \: {S_u}^{\text{row}_N} z + {S_x}^{\text{row}_N} x_0 \in \mathbb{X}_f  \: \: .     
+    \end{split}
+\end{equation}
+
+ 
+
+                                                        

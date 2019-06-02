@@ -1,0 +1,17 @@
+\clearpage
+				
+
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+
+
+"Two motors drive the helicopter, whose degrees of freedom are pitch (roll), travel (yaw) and elevation (vertical). More degrees of freedom then actuators, this is an under-actuated system". 
+
+
+This thesis presents linear model predictive control of a 3 DOF model of a Tandem rotor helicopter, using QUARC, Simulink, and the QP-solver OSQP - both the MATLAB interface and the code generation software package. Both stable and nominal MPC are implemented in Simulink using S-Functions and the aforementioned QP-solver. This is the higher-level of control, the lower level being a PD-controller for the pitch and a PID-controller for the elevation.
+
+Further, a known constant drift in the helicopter is modelled and a state estimator is implemented to try to remove this disturbance. In addition slack variables are added to avoid the  hard constraints on pitch. 
+
+A discussion regarding model inaccuracy in MPC, sampling time selection, and the effects of terminal cost and constraint are taken. The results, both from a MATLAB simulation and the actual performance of the helicopter are presented, along with an analysis of the OSQP-performance online. Conclusively, the work done in this thesis provides the foundation for model predictive control of 3 DOF helicopters. 

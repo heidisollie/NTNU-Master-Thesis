@@ -1,0 +1,51 @@
+\chapter{Discussion}\label{ch:discussion}
+
+The effects of adding a terminal cost and terminal constraint are clearly demonstrated from the performance of the simulation. The system is much more stable, and approaches the equilibrium point much faster. In addition, the constant deviation that is present because of the disturbance is not as large when controlled with stable \acrshort{mpc}. 
+
+\section{Performance of nominal MPC}
+
+It is beneficial for the \acrshort{mpc} to have a low frequency, as this results in a computationally inexpensive system because the optimization problem has to be solved less often. However, there is a trade-off. A lower frequency gives any model discrepancies or any disturbances time to develop before the \acrshort{mpc} receives a new state and calculates a new control input. 
+
+Consider the unconstrained \acrshort{mpc}, which is just an \acrshort{lqr} regulator, much like a \acrshort{pd}-controller. The low frequency equates to a higher time delay. 
+
+For this case, a highly non-linear system has been linearized about the equilibrium point, so non-linearities will occur when the states move away from this point. 
+
+The first run of the helicopter, shown in figure \ref{fig:heli_sim_5_1} shows this very well. Because the feedback to the helicopter is at a much lower rate than the rest of the system (ten times slower), the non-linearities on the system have time to develop before the \acrshort{mpc} receives updated information and calculates a new input. This explains the heavy oscillations one can see in both the pitch reference, the pitch and pitch rate. 
+
+An attempted solution to this problem, seen in figure \ref{fig:heli_sim_5_2} is too tune the \acrshort{mpc} by increasing the oscillating control inputs weight. It is apparent that this works to some degree, the oscillation nearly disappears.
+
+However, to decrease the time it takes for the helicopter to reach its designated target one might consider just increasing the frequency of the \acrshort{mpc}. 
+
+Figure \ref{fig:heli_sim_10_2} shows this. 
+
+Another consideration point when choosing the frequency is the fact that the system model used in the \acrshort{mpc} has to be discretized with the sampling interval $T = \frac{1}{f_{\text{MPC}}}$, where $f_{\text{MPC}}$ is the frequency for the \acrshort{mpc}. This means that for larger frequencies the same control horizon $N = 15$, becomes shorter in the mind of the \acrshort{mpc}. This leads to infeasibility problems.
+
+Consider the system starting at $\lambda = 180 deg$ and trying to move to $0$. The terminal constraint imposed on the last state of the optimal state trajectory requires the system being able to be near the equilibrium point in 15 steps. When the actual time of these 15 steps decreases, because the system model is discretized with a smaller value, the starting point of the system yields an infeasible control problem. 
+
+So larger frequency limits the initial values of the system. 
+
+\section{Performance of stable MPC}
+Discuss first the effect of adding the P and the terminal constraint.
+
+\subsection{With state estimation}
+Discuss the effect of modeling the disturbance
+
+It is clear from the Simulation in MATLAB that modelling the disturbance was successful in removing the constant offset in the travel. However, when running the same on the helicopter, the results varied.
+
+
+
+\section{Performance of OSQP}
+
+Discuss the OSQP performance. Compare it to other popular embedded \acrshort{qp}-solvers (fast gradient method?)
+
+\section{Future work}
+
+The potential extensions to this project are endless. Upgrading the estimator from a Luenberger observer to a Kalman filter is a good start. This requires some testing of the system, to find the covariance value of the disturbance. However, it is obvious that the better estimation of the disturbance, the easier it is to account for.
+
+Some other exciting this that can be done is adding a reference signal into the \acrshort{mpc} block. Potentially a time-varying signal such as the sinus curve, which is a block in Simulink. 
+
+The other obvious extension to this project is using nonlinear model predictive control. Obviously the system in question is highly non-linear so implementing a nonlinear controller would yield much more accurate results. 
+
+Another potential improvement, is implementing a form of \acrshort{mpc} that accounts for disturbance such as for example tube-based \acrshort{mpc}. This will help with the offset in travel, and could also help with the inaccurate model if one can find a way to model the non-linearities as disturbances. However, most likely, nonlinear \acrshort{mpc} is the best solution.
+
+
